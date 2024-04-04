@@ -5,6 +5,8 @@ const twitterBtn = document.getElementById('twitter');
 const newQuoteBtn = document.getElementById('new-quote');
 const loader = document.getElementById('loader');
 
+let quotesArray = [];
+
 // Loading Spinner Shown
 function loading() {
   loader.hidden = false;
@@ -19,32 +21,27 @@ function complete() {
   }
 }
 
-// Get Quote From API
-async function getQuote() {
+// Show New Quote
+function newQuote() {
   loading();
-  // We need to use a Proxy URL to make our API call in order to avoid a CORS error
-  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-  const apiUrl = 'https://raw.githubusercontent.com/PWRXNDR/quotes/main/quotes.json'
+  // Pick a random quote from quotesArray
+  const quote = quotesArray[Math.floor(Math.random() * quotesArray.length)];
+  // Set Quote, Hide Loader
+  quoteText.innerText = quote.quoteText;
+  authorText.innerText = quote.quoteAuthor || 'Unknown';
+  complete();
+}
+
+// Load Quotes
+async function loadQuotes() {
+  loading();
   try {
-    const response = await fetch(proxyUrl + apiUrl);
-    const data = await response.json();
-    // Check if Author field is blank and replace it with 'Unknown'
-    if (data.quoteAuthor === '') {
-      authorText.innerText = 'Unknown';
-    } else {
-      authorText.innerText = data.quoteAuthor;
-    }
-    // Dynamically reduce font size for long quotes
-    if (data.quoteText.length > 120) {
-      quoteText.classList.add('long-quote');
-    } else {
-      quoteText.classList.remove('long-quote');
-    }
-    quoteText.innerText = data.quoteText;
-    // Stop Loading, Show Quote
-    complete();
+    const response = await fetch('quotes.json');
+    quotesArray = await response.json();
+    newQuote();
   } catch (error) {
-    getQuote();
+    // Handle the error here
+    console.log('Whoops, no quotes', error);
   }
 }
 
@@ -57,8 +54,8 @@ function tweetQuote() {
 }
 
 // Event Listeners
-newQuoteBtn.addEventListener('click', getQuote);
+newQuoteBtn.addEventListener('click', newQuote);
 twitterBtn.addEventListener('click', tweetQuote);
 
 // On Load
-getQuote();
+loadQuotes();
